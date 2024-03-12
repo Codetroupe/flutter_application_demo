@@ -30,14 +30,37 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      # 构建Android APK
       - name: Build APK
         run: flutter build apk
 
+       # 构建 AAB 文件
+      - name: Build AAB
+        run: flutter build appbundle
+
+     # 保存aab文件
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: build/app/outputs/bundle  
+
+      # 构建和打包 iOS 应用
+      - name: Build iOS app
+        run: flutter build ios --release --no-codesign
+
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: build/ios/iphoneos
+
+      # 提取Tag版本号
       - name: Extract Version
         id: extract_version
         run: echo "::set-output name=version::$(echo ${{ github.ref }} | sed 's/^refs\/tags\///')"
       
-
+      #创建Release      
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -49,6 +72,7 @@ jobs:
           draft: false
           prerelease: false
 
+       # 上传 APK 到 Release    
       - name: Upload APK to Release
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -57,5 +81,30 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: build/app/outputs/flutter-apk/app-release.apk
-          asset_name: app-release-${{ github.sha }}.apk
+          asset_name: app-release-${{ steps.extract_version.outputs.version }}.apk
           asset_content_type: application/vnd.android.package-archive
+
+
+      # 上传 AAB 到 Release
+      - name: Upload AAB to Release
+        id: upload-aab-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/app/outputs/bundle/release/app-release.aab
+          asset_name: app-release-${{steps.extract_version.outputs.version }}.aab
+          asset_content_type: application/octet-stream   
+
+       # 上传 IPA 到 Release
+      - name: Upload IPA to Release
+        id: upload-ipa-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/ios/iphoneos/*.ipa
+          asset_name: app-release-${{ steps.extract_version.outputs.version }}.ipa
+          asset_content_type: application/octet-stream    
