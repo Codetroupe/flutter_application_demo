@@ -47,11 +47,11 @@ jobs:
           flutter clean  
           flutter build ios --release --no-codesign
 
-      - name: Create IOS Release Artifacts  
-        run: |  
-          mkdir artifacts  
-          cp -r build/ios/iphoneos/Runner.app artifacts/Runner.app  
-          zip -r artifacts/Runner.ipa artifacts/Runner.app  
+      #- name: Create IOS Release Artifacts  
+      #  run: |  
+      #   mkdir artifacts  
+      #    cp -r build/ios/iphoneos/Runner.app artifacts/Runner.app  
+      #    zip -r artifacts/Runner.ipa artifacts/Runner.app  
 
       # 提取版本号
       - name: Extract version from tag  
@@ -69,16 +69,16 @@ jobs:
           draft: false  
           prerelease: false  
 
-      - name: Upload iOS IPA to Release  
-        id: upload-ipa-release-asset  
-        uses: actions/upload-release-asset@v1  
-        env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-        with:  
-          upload_url: ${{ steps.create_release.outputs.upload_url }}  
-          asset_path: ./artifacts/Runner.ipa  
-          asset_name: Runner.ipa  
-          asset_content_type: application/zip    
+     #- name: Upload iOS IPA to Release  
+     #  id: upload-ipa-release-asset  
+     #  uses: actions/upload-release-asset@v1  
+     #  env:  
+     #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+     #  with:  
+     #    upload_url: ${{ steps.create_release.outputs.upload_url }}  
+     #    asset_path: ./artifacts/Runner.ipa  
+     #    asset_name: Runner.ipa  
+     #    asset_content_type: application/zip    
   
       - name: Upload Android APK to Release  
         id: upload-apk-release-asset  
