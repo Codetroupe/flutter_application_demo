@@ -42,10 +42,10 @@ jobs:
       - name: Build Android App Bundle (AAB)  
         run: flutter build appbundle
   
-      - name: Build iOS app  
-        run: |  
-          flutter clean  
-          flutter build ios --release --no-codesign
+     #- name: Build iOS app  
+     #  run: |  
+     #    flutter clean  
+     #    flutter build ios --release --no-codesign
 
       #- name: Create IOS Release Artifacts  
       #  run: |  
