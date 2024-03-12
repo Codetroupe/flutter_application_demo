@@ -11,15 +11,16 @@ jobs:
     runs-on: ubuntu-latest  
     steps:  
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Flutter 
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.2'
+          channel: 'stable'
 
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
@@ -62,7 +63,7 @@ jobs:
         with:  
           upload_url: ${{ steps.create_release.outputs.upload_url }}  
           asset_path: ./build/app/outputs/flutter-apk/app-release.apk    
-          asset_name: app-release.apk  
+          asset_name: app-release-${{ env.VERSION }}.apk  
           asset_content_type: application/vnd.android.package-archive  
     
       - name: Upload Android App Bundle (AAB) to Release  
@@ -73,7 +74,7 @@ jobs:
         with:  
           upload_url: ${{ steps.create_release.outputs.upload_url }}  
           asset_path: ./build/app/outputs/bundle/release/app-release.aab  
-          asset_name: app-release.aab  
+          asset_name: app-release-${{ env.VERSION }}.aab  
           asset_content_type: application/octet-stream  
    
   build_ios:  
@@ -82,15 +83,16 @@ jobs:
     runs-on: macos-latest  
     steps:  
       - name: Checkout Code
-        uses: actions/checkout@v2  
+        uses: actions/checkout@v4  
 
       - name: Set up Flutter 
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.2'
+          channel: 'stable'
 
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
@@ -125,14 +127,13 @@ jobs:
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
           if [ $response -eq 404 ]; then
-            echo "::set-output name=release_exists::false"
+            echo "release_exists = false" >> $GITHUB_ENV
           else
-            echo "::set-output name=release_exists::true"
+            echo "release_exists = true" >> $GITHUB_ENV
             response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
             upload_url=$(echo "$response" | jq -r '.upload_url')
-            echo "::set-output name=upload_url::$upload_url"
+            echo "upload_url = $upload_url" >> $GITHUB_ENV
           fi
-
 
        # 如果不存在，则创建新的 GitHub Release
       - name: Create new release
@@ -155,7 +156,7 @@ jobs:
         with:  
           upload_url: ${{ steps.get_release.outputs.upload_url || steps.create_release.outputs.upload_url }}  
           asset_path: ./artifacts/Runner.ipa  
-          asset_name: Runner.ipa  
-          asset_content_type: application/zip    
+          asset_name: ios-runner-${{ env.VERSION }}.ipa
+          asset_content_type: application/zip
             
     
