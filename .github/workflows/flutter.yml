@@ -52,15 +52,17 @@ jobs:
             const response = await github.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag: ${{ env.VERSION }}
+              tag: ${{ env.VERSION }} // 根据你的需要设置标签名称
             });
-            console.log('Release exists:', response.data);
-            core.setOutput('upload_url', response.data.upload_url);
+            core.setOutput('release_exists', response.status == 200);
+            if (response.status == 200) {
+              core.setOutput('upload_url', response.data.upload_url);
+            }
 
 
        # 如果不存在，则创建新的 GitHub Release
       - name: Create new release
-        if: steps.get_release.outputs.upload_url == null
+        if: steps.get_release.outputs.release_exists != 'true'
         uses: actions/create-release@v1
         id: create_release
         with:  
@@ -143,14 +145,17 @@ jobs:
             const response = await github.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag: ${{ env.VERSION }}
+              tag: ${{ env.VERSION }} // 根据你的需要设置标签名称
             });
-            console.log('Release exists:', response.data);
-            core.setOutput('upload_url', response.data.upload_url);
+            core.setOutput('release_exists', response.status == 200);
+            if (response.status == 200) {
+              core.setOutput('upload_url', response.data.upload_url);
+            }
+
 
        # 如果不存在，则创建新的 GitHub Release
       - name: Create new release
-        if: steps.get_release.outputs.upload_url == null
+        if: steps.get_release.outputs.release_exists != 'true'
         uses: actions/create-release@v1
         id: create_release
         with:  
