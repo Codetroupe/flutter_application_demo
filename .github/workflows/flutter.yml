@@ -93,9 +93,10 @@ jobs:
         with:  
           name: ios-build  
         # 提取版本号
-      - name: Extract Version
-        id: extract_version
-        run: echo "::set-output name=version::$(echo ${{ github.ref }} | sed 's/^refs\/tags\///')"
+      - name: Extract version from tag  
+        run: |  
+          VERSION=${GITHUB_REF#refs/tags/}  
+          echo "VERSION=$VERSION" >> $GITHUB_ENV  
       #创建release
       - name: Create Release  
         id: create_release  
@@ -103,8 +104,8 @@ jobs:
         env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
-          tag_name: ${{ steps.extract_version.outputs.version }}  
-          release_name: Release ${{ steps.extract_version.outputs.version }}  
+          tag_name: ${{ env.VERSION }}  
+          release_name: Release ${{ env.VERSION }}  
           draft: false  
           prerelease: false  
       - name: Upload APKs and AAB to Release  
@@ -113,24 +114,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
           upload_url: ${{ steps.create_release.outputs.upload_url }}  
-          asset_path: ./build/app/outputs/apk/release/*.apk  
-          asset_name: android-apks  
+          asset_path: ./artifacts/android-builds.zip  
+          asset_name: android-builds-${{ env.VERSION }}   
           asset_content_type: application/zip  
-      - name: Upload AAB to Release  
+   
+      - name: Upload iOS build to Release (as ZIP)  
         uses: actions/upload-release-asset@v1  
         env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:  
           upload_url: ${{ steps.create_release.outputs.upload_url }}  
-          asset_path: ./build/app/outputs/bundle/release/*.aab  
-          asset_name: android-aab  
+          asset_path: ./artifacts/ios-builds.zip  
+          asset_name: ios-build-${{ env.VERSION }}   
           asset_content_type: application/zip  
-      - name: Upload iOS build to Release (as ZIP)  
-        run: |  
-          zip -r ios-build.zip ios-build/  
-          gh release upload ${{ github.ref }} ios-build.zip  
-        env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
 
 
