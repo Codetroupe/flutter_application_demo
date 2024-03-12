@@ -42,14 +42,17 @@ jobs:
       - name: Build Android App Bundle (AAB)  
         run: flutter build appbundle
   
-      - name: Build iOS IPA  
+      - name: Build iOS app  
         run: |  
-          # 配置 Xcode 版本，这里使用的是默认的最新稳定版  
-          sudo xcode-select --reset  
-          # 构建 iOS 应用  
-          flutter build ios --release --no-codesign  
-          # 找到并压缩生成的 IPA 文件  
-          find . -name "*.ipa" -type f -exec zip -r {}.zip {} \;  
+          flutter clean  
+          flutter build ios --release --no-codesign
+
+      - name: Create IOS Release Artifacts  
+        run: |  
+          mkdir artifacts  
+          cp -r build/ios/iphoneos/Runner.app artifacts/Runner.app  
+          zip -r artifacts/Runner.ipa artifacts/Runner.app  
+
       # 提取版本号
       - name: Extract version from tag  
         run: |  
@@ -95,6 +98,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
           upload_url: ${{ steps.create_release.outputs.upload_url }}  
-          asset_path: ./*.ipa.zip  
-          asset_name: app.ipa.zip  
+          asset_path: ./artifacts/Runner.ipa  
+          asset_name: Runner.ipa  
           asset_content_type: application/zip
