@@ -45,19 +45,16 @@ jobs:
       # 检查是否存在指定的 GitHub Release
       - name: Get existing release
         id: get_release
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const response = await github.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: ${{ env.VERSION }} // 根据你的需要设置标签名称
-            });
-            core.setOutput('release_exists', response.status == 200);
-            if (response.status == 200) {
-              core.setOutput('upload_url', response.data.upload_url);
-            }
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
+          if [ $response -eq 404 ]; then
+            echo "::set-output name=release_exists::false"
+          else
+            echo "::set-output name=release_exists::true"
+            response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
+            upload_url=$(echo "$response" | jq -r '.upload_url')
+            echo "::set-output name=upload_url::$upload_url"
+          fi
 
 
        # 如果不存在，则创建新的 GitHub Release
@@ -138,19 +135,16 @@ jobs:
       # 检查是否存在指定的 GitHub Release
       - name: Get existing release
         id: get_release
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const response = await github.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: ${{ env.VERSION }} // 根据你的需要设置标签名称
-            });
-            core.setOutput('release_exists', response.status == 200);
-            if (response.status == 200) {
-              core.setOutput('upload_url', response.data.upload_url);
-            }
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
+          if [ $response -eq 404 ]; then
+            echo "::set-output name=release_exists::false"
+          else
+            echo "::set-output name=release_exists::true"
+            response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
+            upload_url=$(echo "$response" | jq -r '.upload_url')
+            echo "::set-output name=upload_url::$upload_url"
+          fi
 
 
        # 如果不存在，则创建新的 GitHub Release
