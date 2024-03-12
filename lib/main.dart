@@ -133,7 +133,7 @@ class RxDartApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const RxDartHomePage(title: 'Flutter RxDart Demo Home Page'),
+      home: const RxDartHomePage(title: 'Flutter RxDart Demo Home Page Test'),
     );
   }
 }
@@ -144,8 +144,6 @@ class RxDartHomePage extends StatefulWidget {
   @override
   State<RxDartHomePage> createState() => _RxDartHomePageState();
 }
-
-
 
 class _RxDartHomePageState extends State<RxDartHomePage> {
   final BehaviorSubject<int> _counterSubject = BehaviorSubject<int>.seeded(0);
@@ -173,12 +171,12 @@ class _RxDartHomePageState extends State<RxDartHomePage> {
             if (snapshot.hasData) {
               return Text(
                 'Counter: ${snapshot.data}',
-                style: TextStyle(fontSize: 24),
+                style: Theme.of(context).textTheme.headlineMedium,
               );
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else {
-              return CircularProgressIndicator();
+              return const CircularProgressIndicator();
             }
           },
         ),
@@ -186,7 +184,7 @@ class _RxDartHomePageState extends State<RxDartHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

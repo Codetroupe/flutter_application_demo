@@ -1,110 +1,109 @@
-name: Flutter CI
-
-on:
-  push:
-    tags:
-      - '*'
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.2'
-
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
-
-      - name: Get packages
-        run: flutter pub get
-
-      - name: Run tests
-        run: flutter test
-
-      # 构建Android APK
-      - name: Build APK
-        run: flutter build apk
-
-       # 构建 AAB 文件
-      - name: Build AAB
-        run: flutter build appbundle
-
-     # 保存aab文件
-      - name: Save artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: app
-          path: build/app/outputs/bundle  
-
-      # 构建和打包 iOS 应用
-      - name: Build iOS app
-        run: flutter build ios --release --no-codesign
-
-      - name: Save artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: app
-          path: build/ios/iphoneos
-
-      # 提取Tag版本号
+name: Flutter CI  
+  
+on:  
+  push:  
+    tags:  
+      - 'v*' # Trigger on version tags like v1.0.0  
+  
+jobs:  
+  build_android:  
+    name: Build Android  
+    runs-on: ubuntu-latest  
+    steps:  
+      - uses: actions/checkout@v2  
+      - name: Get Flutter  
+        run: |  
+          flutter channel stable  
+          flutter upgrade  
+      - name: Build APK and AAB  
+        run: |  
+          flutter clean  
+          flutter build apk --split-per-abi --release  
+          flutter build appbundle --release  
+      - name: Archive APKs and AAB  
+        uses: actions/upload-artifact@v2  
+        with:  
+          name: android-builds  
+          path: |  
+            build/app/outputs/apk/release/*.apk  
+            build/app/outputs/bundle/release/*.aab  
+   
+  build_ios:  
+    name: Build iOS  
+    runs-on: macos-latest  
+    steps:  
+      - uses: actions/checkout@v2  
+      - name: Get Flutter  
+        run: |  
+          flutter channel stable  
+          flutter upgrade  
+      - name: Install CocoaPods dependencies  
+        run: |  
+          cd ios  
+          pod install  
+      - name: Build iOS app  
+        run: |  
+          flutter clean  
+          flutter build ios --release --no-codesign -t lib/main.dart  
+      - name: Archive iOS build  
+        uses: actions/upload-artifact@v2  
+        with:  
+          name: ios-build  
+          path: build/ios/iphoneos/Runner.app  
+  
+  create_release:  
+    name: Create Release  
+    needs: [build_android, build_ios]  
+    runs-on: ubuntu-latest  
+    if: startsWith(github.ref, 'refs/tags/')  
+    steps:  
+      - name: Download APKs and AAB  
+        uses: actions/download-artifact@v2  
+        with:  
+          name: android-builds  
+      - name: Download iOS build  
+        uses: actions/download-artifact@v2  
+        with:  
+          name: ios-build  
+        # 提取版本号
       - name: Extract Version
         id: extract_version
         run: echo "::set-output name=version::$(echo ${{ github.ref }} | sed 's/^refs\/tags\///')"
-      
-      #创建Release      
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
+      #创建release
+      - name: Create Release  
+        id: create_release  
+        uses: actions/create-release@v1  
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:  
+          tag_name: ${{ steps.extract_version.outputs.version }}  
+          release_name: Release ${{ steps.extract_version.outputs.version }}  
+          draft: false  
+          prerelease: false  
+      - name: Upload APKs and AAB to Release  
+        uses: actions/upload-release-asset@v1  
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:  
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  
+          asset_path: ./build/app/outputs/apk/release/*.apk  
+          asset_name: android-apks  
+          asset_content_type: application/zip  
+      - name: Upload AAB to Release  
+        uses: actions/upload-release-asset@v1  
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:  
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  
+          asset_path: ./build/app/outputs/bundle/release/*.aab  
+          asset_name: android-aab  
+          asset_content_type: application/zip  
+      - name: Upload iOS build to Release (as ZIP)  
+        run: |  
+          zip -r ios-build.zip ios-build/  
+          gh release upload ${{ github.ref }} ios-build.zip  
+        env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.extract_version.outputs.version }}
-          release_name: Release ${{ steps.extract_version.outputs.version }}
-          draft: false
-          prerelease: false
-
-       # 上传 APK 到 Release    
-      - name: Upload APK to Release
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/app/outputs/flutter-apk/app-release.apk
-          asset_name: app-release-${{ steps.extract_version.outputs.version }}.apk
-          asset_content_type: application/vnd.android.package-archive
+          
 
 
-      # 上传 AAB 到 Release
-      - name: Upload AAB to Release
-        id: upload-aab-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/app/outputs/bundle/release/app-release.aab
-          asset_name: app-release-${{steps.extract_version.outputs.version }}.aab
-          asset_content_type: application/octet-stream   
-
-       # 上传 IPA 到 Release
-      - name: Upload IPA to Release
-        id: upload-ipa-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/ios/iphoneos/*.ipa
-          asset_name: app-release-${{ steps.extract_version.outputs.version }}.ipa
-          asset_content_type: application/octet-stream    
