@@ -42,31 +42,17 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/}  
           echo "VERSION=$VERSION" >> $GITHUB_ENV      
 
-      # 检查是否存在指定的 GitHub Release
-      - name: Get existing release
-        id: get_release
-        run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
-          if [ $response -eq 404 ]; then
-            echo "::set-output name=release_exists::false"
-          else
-            echo "::set-output name=release_exists::true"
-            response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
-            upload_url=$(echo "$response" | jq -r '.upload_url')
-            echo "::set-output name=upload_url::$upload_url"
-          fi
-
-
-       # 如果不存在，则创建新的 GitHub Release
-      - name: Create new release
-        if: steps.get_release.outputs.release_exists != 'true'
-        uses: actions/create-release@v1
-        id: create_release
+      #创建release
+      - name: Create Release  
+        id: create_release  
+        uses: actions/create-release@v1  
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
           tag_name: ${{ env.VERSION }}  
           release_name: Release ${{ env.VERSION }}  
           draft: false  
-          prerelease: false    
+          prerelease: false   
 
       - name: Upload Android APK to Release  
         id: upload-apk-release-asset  
@@ -74,7 +60,7 @@ jobs:
         env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
-          upload_url: ${{ steps.get_release.outputs.upload_url || steps.create_release.outputs.upload_url }}  
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  
           asset_path: ./build/app/outputs/apk/app-release.apk    
           asset_name: app-release.apk  
           asset_content_type: application/vnd.android.package-archive  
@@ -92,6 +78,7 @@ jobs:
    
   build_ios:  
     name: Build iOS  
+    needs: [build_android]  
     runs-on: macos-latest  
     steps:  
       - name: Checkout Code
@@ -150,8 +137,10 @@ jobs:
        # 如果不存在，则创建新的 GitHub Release
       - name: Create new release
         if: steps.get_release.outputs.release_exists != 'true'
-        uses: actions/create-release@v1
         id: create_release
+        uses: actions/create-release@v1
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
           tag_name: ${{ env.VERSION }}  
           release_name: Release ${{ env.VERSION }}  
