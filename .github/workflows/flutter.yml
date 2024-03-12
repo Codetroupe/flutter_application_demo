@@ -67,15 +67,11 @@ jobs:
       - name: Run tests
         run: flutter test    
 
-      - name: Install CocoaPods dependencies  
-        run: |  
-          cd ios  
-          pod install  
       - name: Build iOS app  
         run: |  
           flutter clean  
           flutter build ios --release --no-codesign -t lib/main.dart  
-          
+
       - name: Archive iOS build  
         uses: actions/upload-artifact@v2  
         with:  
