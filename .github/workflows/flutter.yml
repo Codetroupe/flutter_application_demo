@@ -13,15 +13,22 @@ jobs:
     steps:  
       - uses: actions/checkout@v2  
   
-      - name: Set up Flutter  
-        uses: subosito/flutter-action@v2  
-        with:  
-          flutter-version: 'stable' # 使用稳定版 Flutter  
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.2'
   
-      - name: Get Flutter version from tag  
-        id: get_version  
-        run: |  
-          echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}  
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+  
+      - name: Get packages
+        run: flutter pub get
+  
+      - name: Run tests
+        run: flutter test
    
       - name: Build Android APK  
         run: flutter build apk --release  
