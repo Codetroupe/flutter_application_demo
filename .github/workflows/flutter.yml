@@ -10,16 +10,31 @@ jobs:
     name: Build Android  
     runs-on: ubuntu-latest  
     steps:  
-      - uses: actions/checkout@v2  
-      - name: Get Flutter  
-        run: |  
-          flutter channel stable  
-          flutter upgrade  
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter 
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.2'
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+  
+      - name: Get packages
+        run: flutter pub get
+  
+      - name: Run tests
+        run: flutter test    
+
       - name: Build APK and AAB  
         run: |  
           flutter clean  
-          flutter build apk --split-per-abi --release  
-          flutter build appbundle --release  
+          flutter build apk
+          flutter build appbundle
       - name: Archive APKs and AAB  
         uses: actions/upload-artifact@v2  
         with:  
@@ -32,11 +47,26 @@ jobs:
     name: Build iOS  
     runs-on: macos-latest  
     steps:  
-      - uses: actions/checkout@v2  
-      - name: Get Flutter  
-        run: |  
-          flutter channel stable  
-          flutter upgrade  
+      - name: Checkout Code
+        uses: actions/checkout@v2  
+
+      - name: Set up Flutter 
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.2'
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+  
+      - name: Get packages
+        run: flutter pub get
+  
+      - name: Run tests
+        run: flutter test    
+
       - name: Install CocoaPods dependencies  
         run: |  
           cd ios  
@@ -45,6 +75,7 @@ jobs:
         run: |  
           flutter clean  
           flutter build ios --release --no-codesign -t lib/main.dart  
+          
       - name: Archive iOS build  
         uses: actions/upload-artifact@v2  
         with:  
