@@ -68,6 +68,17 @@ jobs:
           release_name: Release ${{ env.VERSION }}  
           draft: false  
           prerelease: false  
+
+      - name: Upload iOS IPA to Release  
+        id: upload-ipa-release-asset  
+        uses: actions/upload-release-asset@v1  
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:  
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  
+          asset_path: ./artifacts/Runner.ipa  
+          asset_name: Runner.ipa  
+          asset_content_type: application/zip    
   
       - name: Upload Android APK to Release  
         id: upload-apk-release-asset  
@@ -91,13 +102,4 @@ jobs:
           asset_name: app-release.aab  
           asset_content_type: application/octet-stream  
   
-      - name: Upload iOS IPA to Release  
-        id: upload-ipa-release-asset  
-        uses: actions/upload-release-asset@v1  
-        env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-        with:  
-          upload_url: ${{ steps.create_release.outputs.upload_url }}  
-          asset_path: ./artifacts/Runner.ipa  
-          asset_name: Runner.ipa  
-          asset_content_type: application/zip
+     
