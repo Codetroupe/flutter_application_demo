@@ -31,10 +31,10 @@ jobs:
         run: flutter test
    
       - name: Build Android APK  
-        run: flutter build apk --release  
+        run: flutter build apk
   
       - name: Build Android App Bundle (AAB)  
-        run: flutter build appbundle --release  
+        run: flutter build appbundle
   
       - name: Build iOS IPA  
         run: |  
@@ -44,15 +44,19 @@ jobs:
           flutter build ios --release --no-codesign  
           # 找到并压缩生成的 IPA 文件  
           find . -name "*.ipa" -type f -exec zip -r {}.zip {} \;  
-   
+      # 提取版本号
+      - name: Extract version from tag  
+        run: |  
+          VERSION=${GITHUB_REF#refs/tags/}  
+          echo "VERSION=$VERSION" >> $GITHUB_ENV  
       - name: Create Release  
         id: create_release  
         uses: actions/create-release@v1  
         env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
-          tag_name: ${{ steps.get_version.outputs.VERSION }}  
-          release_name: Release ${{ steps.get_version.outputs.VERSION }}  
+          tag_name: ${{ env.VERSION }}  
+          release_name: Release ${{ env.VERSION }}  
           draft: false  
           prerelease: false  
   
