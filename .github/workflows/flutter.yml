@@ -173,8 +173,8 @@ jobs:
           Start-Process -FilePath 'innosetup-6.2.2.exe' -ArgumentList '/SILENT' -Wait
      
      # 运行 Inno Setup 编译器命令，例如打印版本号
-      - name: Check Inno Setup version
-        run: iscc /version
+     # - name: Check Inno Setup version
+     #   run: iscc /V
 
       - name: Set up Flutter 
         uses: subosito/flutter-action@v2
