@@ -7,7 +7,7 @@ on:
   
 jobs:  
   create_release:
-    name: Build Android  
+    name: Create Release  
     runs-on: ubuntu-latest  
     steps:  
       # 提取版本号
@@ -30,6 +30,29 @@ jobs:
     outputs:  
       result_url: ${{ steps.create_release.outputs.upload_url }}          
       result_version: ${{ env.VERSION }}          
+
+  update_windows_version:
+    name: Update Windows exe version
+    needs: [create_release] 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      # or one-off:
+      #- run: npm install execa
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = 'install/buildWindowsExe.iss';
+            let scriptContent = fs.readFileSync(path, 'utf8');
+            scriptContent = scriptContent.replace(/AppVersion=.*$/m, 'AppVersion=${{ needs.create_release.outputs.result_version }}.substring(1)');
+            fs.writeFileSync(path, scriptContent);
+
 
   build_android:  
     name: Build Android  
@@ -135,10 +158,20 @@ jobs:
             
   build_windows:  
     name: Build Windows  
-    needs: [create_release]  
+    needs: [update_windows_version]  
     runs-on: windows-latest  
     steps:  
       - uses: actions/checkout@v4  
+
+       # 安装 Inno Setup 编译器
+      - name: Install Inno Setup
+        run: |
+          wget https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe
+          .\innosetup-6.2.2.exe /SILENT
+
+     # 运行 Inno Setup 编译器命令，例如打印版本号
+      - name: Check Inno Setup version
+        run: iscc /version
 
       - name: Set up Flutter 
         uses: subosito/flutter-action@v2
@@ -160,6 +193,9 @@ jobs:
 
       - name: Build Windows app  
         run: flutter build windows  
+
+      - name: Inno Setup
+        run: iscc install/buildWindowsExe.iss  
  
       - name: Upload Windows exe to Release  
         id: upload-exe-release-asset  
@@ -168,7 +204,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
           upload_url: ${{ needs.create_release.outputs.result_url }}  
-          asset_path: ./build/windows/x64/runner/Release/flutter_application_demo.exe
+          asset_path: ./build/windows/install/*
           asset_name: windows-${{ needs.create_release.outputs.result_version }}.exe
           asset_content_type: application/octet-stream 
             
