@@ -203,7 +203,7 @@ jobs:
       - name: Zip Folder
         run: |
           cd build/windows/x64/runner/Release
-          zip -r windwos.zip .
+          Compress-Archive -Path ./ -DestinationPath windwos.zip
  
       - name: Upload Windows exe to Release  
         id: upload-exe-release-asset  
