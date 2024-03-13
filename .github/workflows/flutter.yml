@@ -158,7 +158,7 @@ jobs:
             
   build_windows:  
     name: Build Windows  
-    needs: [update_windows_version]  
+    needs: [create_release, update_windows_version]  
     runs-on: windows-latest  
     steps:  
       - uses: actions/checkout@v4  
