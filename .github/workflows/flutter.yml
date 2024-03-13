@@ -198,7 +198,7 @@ jobs:
         run: flutter build windows  
 
       - name: Inno Setup
-        run: iscc /Q build/windows/install/OOutputLog.txt install/builderWindowsExe.iss  
+        run: iscc /Q /OOutputLog.txt install/builderWindowsExe.iss  
  
       - name: Upload Windows exe to Release  
         id: upload-exe-release-asset  
