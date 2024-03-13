@@ -127,17 +127,17 @@ jobs:
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
           if [ $response -eq 404 ]; then
-            echo "release_exists=false" >> $GITHUB_ENV
+            echo "::set-output name=release_exists::false"
           else
-            echo "release_exists=true" >> $GITHUB_ENV
+            echo "::set-output name=release_exists::true"
             response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
             upload_url=$(echo "$response" | jq -r '.upload_url')
-            echo "uploadUrl=$upload_url" >> $GITHUB_ENV
+            echo "::set-output name=upload_url::$upload_url"
           fi
 
        # 如果不存在，则创建新的 GitHub Release
       - name: Create new release
-        if:  ${{ env.release_exists }} != 'true'
+        if: steps.get_release.outputs.release_exists != 'true'
         id: create_release
         uses: actions/create-release@v1
         env:  
@@ -154,9 +154,84 @@ jobs:
         env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
-          upload_url: ${{ env.uploadUrl || steps.create_release.outputs.upload_url }}  
+          upload_url: ${{ steps.get_release.outputs.upload_url || steps.create_release.outputs.upload_url }}  
           asset_path: ./artifacts/Runner.ipa  
           asset_name: ios-runner-${{ env.VERSION }}.ipa
           asset_content_type: application/zip
             
+  build_windows:  
+    name: Build iOS  
+    needs: [build_android]  
+    runs-on: windows-latest  
+    steps:  
+      - uses: actions/checkout@v4  
+
+      - name: Set up Flutter 
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.2'
+          channel: 'stable'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+  
+      - name: Get packages
+        run: flutter pub get
+  
+      - name: Run tests
+        run: flutter test    
+
+      - name: Build Windows app  
+        run: flutter build windows --release --target-platform=windows-x64  
+
+        
+       # 提取版本号
+      - name: Extract version from tag  
+        run: |  
+          VERSION=${GITHUB_REF#refs/tags/}  
+          echo "VERSION=$VERSION" >> $GITHUB_ENV 
+
+      # 检查是否存在指定的 GitHub Release
+      - name: Get existing release
+        id: get_release
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
+          if [ $response -eq 404 ]; then
+            echo "::set-output name=release_exists::false"
+          else
+            echo "::set-output name=release_exists::true"
+            response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
+            upload_url=$(echo "$response" | jq -r '.upload_url')
+            echo "::set-output name=upload_url::$upload_url"
+          fi
+
+      # 如果不存在，则创建新的 GitHub Release
+      - name: Create new release
+        if: steps.get_release.outputs.release_exists != 'true'
+        id: create_release
+        uses: actions/create-release@v1
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:  
+          tag_name: ${{ env.VERSION }}  
+          release_name: Release ${{ env.VERSION }}  
+          draft: false  
+          prerelease: false    
+
+      - name: Upload Windows exe to Release  
+        id: upload-exe-release-asset  
+        uses: actions/upload-release-asset@v1  
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:  
+          upload_url: ${{ steps.get_release.outputs.upload_url || steps.create_release.outputs.upload_url }}  
+          asset_path: ./build/windows/x64/runner/Release/flutter_application_demo.exe
+          asset_name: windows-${{ env.VERSION }}.exe
+          asset_content_type: application/octet-stream 
+            
+  
+
     
