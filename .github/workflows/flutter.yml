@@ -6,8 +6,34 @@ on:
       - 'v*' # Trigger on version tags like v1.0.0  
   
 jobs:  
+  create_release:
+    name: Build Android  
+    runs-on: ubuntu-latest  
+    steps:  
+      # 提取版本号
+      - name: Extract version from tag  
+        run: |  
+          VERSION=${GITHUB_REF#refs/tags/}  
+          echo "VERSION=$VERSION" >> $GITHUB_ENV      
+
+      #创建release
+      - name: Create Release  
+        id: create_release  
+        uses: actions/create-release@v1  
+        env:  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+        with:  
+          tag_name: ${{ env.VERSION }}  
+          release_name: Release ${{ env.VERSION }}  
+          draft: false  
+          prerelease: false
+    outputs:  
+      result_url: ${{ steps.create_release.outputs.upload_url }}          
+      result_version: ${{ env.VERSION }}          
+
   build_android:  
     name: Build Android  
+    needs: [create_release]  
     runs-on: ubuntu-latest  
     steps:  
       - name: Checkout Code
@@ -37,33 +63,15 @@ jobs:
           flutter build apk
           flutter build appbundle
 
-       # 提取版本号
-      - name: Extract version from tag  
-        run: |  
-          VERSION=${GITHUB_REF#refs/tags/}  
-          echo "VERSION=$VERSION" >> $GITHUB_ENV      
-
-      #创建release
-      - name: Create Release  
-        id: create_release  
-        uses: actions/create-release@v1  
-        env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-        with:  
-          tag_name: ${{ env.VERSION }}  
-          release_name: Release ${{ env.VERSION }}  
-          draft: false  
-          prerelease: false   
-
       - name: Upload Android APK to Release  
         id: upload-apk-release-asset  
         uses: actions/upload-release-asset@v1
         env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
-          upload_url: ${{ steps.create_release.outputs.upload_url }}  
+          upload_url: ${{ needs.create_release.outputs.result_url }}  
           asset_path: ./build/app/outputs/flutter-apk/app-release.apk    
-          asset_name: app-release-${{ env.VERSION }}.apk  
+          asset_name: app-release-${{ needs.create_release.outputs.result_version }}.apk  
           asset_content_type: application/vnd.android.package-archive  
     
       - name: Upload Android App Bundle (AAB) to Release  
@@ -72,14 +80,14 @@ jobs:
         env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
-          upload_url: ${{ steps.create_release.outputs.upload_url }}  
+          upload_url: ${{ needs.create_release.outputs.result_url }}  
           asset_path: ./build/app/outputs/bundle/release/app-release.aab  
-          asset_name: app-release-${{ env.VERSION }}.aab  
+          asset_name: app-release-${{ needs.create_release.outputs.result_version }}.aab  
           asset_content_type: application/octet-stream  
    
   build_ios:  
     name: Build iOS  
-    needs: [build_android]  
+    needs: [create_release]  
     runs-on: macos-latest  
     steps:  
       - name: Checkout Code
@@ -113,55 +121,21 @@ jobs:
           mkdir artifacts  
           cp -r build/ios/iphoneos/Runner.app artifacts/Runner.app  
           zip -r artifacts/Runner.ipa artifacts/Runner.app  
- 
-
-       # 提取版本号
-      - name: Extract version from tag  
-        run: |  
-          VERSION=${GITHUB_REF#refs/tags/}  
-          echo "VERSION=$VERSION" >> $GITHUB_ENV 
-
-      # 检查是否存在指定的 GitHub Release
-      - name: Get existing release
-        id: get_release
-        run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
-          if [ $response -eq 404 ]; then
-            echo "::set-output name=release_exists::false"
-          else
-            echo "::set-output name=release_exists::true"
-            response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
-            upload_url=$(echo "$response" | jq -r '.upload_url')
-            echo "::set-output name=upload_url::$upload_url"
-          fi
-
-       # 如果不存在，则创建新的 GitHub Release
-      - name: Create new release
-        if: steps.get_release.outputs.release_exists != 'true'
-        id: create_release
-        uses: actions/create-release@v1
-        env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-        with:  
-          tag_name: ${{ env.VERSION }}  
-          release_name: Release ${{ env.VERSION }}  
-          draft: false  
-          prerelease: false    
-
+   
       - name: Upload iOS IPA to Release  
         id: upload-ipa-release-asset  
         uses: actions/upload-release-asset@v1  
         env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
-          upload_url: ${{ steps.get_release.outputs.upload_url || steps.create_release.outputs.upload_url }}  
+          upload_url: ${{ needs.create_release.outputs.result_url }}  
           asset_path: ./artifacts/Runner.ipa  
-          asset_name: ios-runner-${{ env.VERSION }}.ipa
+          asset_name: ios-runner-${{ needs.create_release.outputs.result_version }}.ipa
           asset_content_type: application/zip
             
   build_windows:  
-    name: Build iOS  
-    needs: [build_android]  
+    name: Build Windows  
+    needs: [create_release]  
     runs-on: windows-latest  
     steps:  
       - uses: actions/checkout@v4  
@@ -186,50 +160,16 @@ jobs:
 
       - name: Build Windows app  
         run: flutter build windows --release --target-platform=windows-x64  
-
-        
-       # 提取版本号
-      - name: Extract version from tag  
-        run: |  
-          VERSION=${GITHUB_REF#refs/tags/}  
-          echo "VERSION=$VERSION" >> $GITHUB_ENV 
-
-      # 检查是否存在指定的 GitHub Release
-      - name: Get existing release
-        id: get_release
-        run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
-          if [ $response -eq 404 ]; then
-            echo "::set-output name=release_exists::false"
-          else
-            echo "::set-output name=release_exists::true"
-            response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
-            upload_url=$(echo "$response" | jq -r '.upload_url')
-            echo "::set-output name=upload_url::$upload_url"
-          fi
-
-      # 如果不存在，则创建新的 GitHub Release
-      - name: Create new release
-        if: steps.get_release.outputs.release_exists != 'true'
-        id: create_release
-        uses: actions/create-release@v1
-        env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-        with:  
-          tag_name: ${{ env.VERSION }}  
-          release_name: Release ${{ env.VERSION }}  
-          draft: false  
-          prerelease: false    
-
+ 
       - name: Upload Windows exe to Release  
         id: upload-exe-release-asset  
         uses: actions/upload-release-asset@v1  
         env:  
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
         with:  
-          upload_url: ${{ steps.get_release.outputs.upload_url || steps.create_release.outputs.upload_url }}  
+          upload_url: ${{ needs.create_release.outputs.result_url }}  
           asset_path: ./build/windows/x64/runner/Release/flutter_application_demo.exe
-          asset_name: windows-${{ env.VERSION }}.exe
+          asset_name: windows-${{ needs.create_release.outputs.result_version }}.exe
           asset_content_type: application/octet-stream 
             
   
