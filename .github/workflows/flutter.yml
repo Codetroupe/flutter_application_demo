@@ -27,76 +27,62 @@ jobs:
           release_name: Release ${{ env.VERSION }}  
           draft: false  
           prerelease: false
+    # 将Release的路径和版本号输出      
     outputs:  
       result_url: ${{ steps.create_release.outputs.upload_url }}          
       result_version: ${{ env.VERSION }}          
-
-  update_windows_version:
-    name: Update Windows exe version
-    needs: [create_release] 
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      #- run: npm ci
-      # or one-off:
-      #- run: npm install execa
-      - uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const path = './install/builderWindowsExe.iss';
-            let scriptContent = fs.readFileSync(path, 'utf8');
-            scriptContent = scriptContent.replace(/AppVersion=.*$/m, `AppVersion=${{ needs.create_release.outputs.result_version }}.substring(1)`);
-            fs.writeFileSync(path, scriptContent);
-
-
+ 
   build_android:  
     name: Build Android  
-    needs: [create_release]  
-    runs-on: ubuntu-latest  
-    steps:  
+    needs: [create_release]  #依赖于create_release即执行完create_release再执行此job
+    runs-on: ubuntu-latest  #使用Ubuntu系统构建
+    steps:
+      #checkout代码  
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      #安装flutter环境
       - name: Set up Flutter 
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.2'
           channel: 'stable'
-
+      
+      #缓存构建依赖    
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
   
+      #更新flutter依赖    
       - name: Get packages
         run: flutter pub get
-  
+      
+      #执行单元测试 
       - name: Run tests
         run: flutter test    
-
+      
+      #分别构建apk和aab包  
       - name: Build APK and AAB  
         run: |  
           flutter clean  
           flutter build apk
           flutter build appbundle
 
+      #上传到Release    
       - name: Upload Android APK to Release  
         id: upload-apk-release-asset  
         uses: actions/upload-release-asset@v1
         env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  #token授权
         with:  
-          upload_url: ${{ needs.create_release.outputs.result_url }}  
-          asset_path: ./build/app/outputs/flutter-apk/app-release.apk    
-          asset_name: app-release-${{ needs.create_release.outputs.result_version }}.apk  
-          asset_content_type: application/vnd.android.package-archive  
+          upload_url: ${{ needs.create_release.outputs.result_url }}  #create_release输出的上传路径
+          asset_path: ./build/app/outputs/flutter-apk/app-release.apk #打包产物的路径
+          asset_name: app-release-${{ needs.create_release.outputs.result_version }}.apk  #更改文件名称,create_release输出的版本号
+          asset_content_type: application/vnd.android.package-archive #上传资源类型 
     
+      #同上    
       - name: Upload Android App Bundle (AAB) to Release  
         id: upload-aab-release-asset  
         uses: actions/upload-release-asset@v1  
@@ -111,7 +97,7 @@ jobs:
   build_ios:  
     name: Build iOS  
     needs: [create_release]  
-    runs-on: macos-latest  
+    runs-on: macos-latest  #构建ios包,需要用macOS
     steps:  
       - name: Checkout Code
         uses: actions/checkout@v4  
@@ -134,17 +120,20 @@ jobs:
       - name: Run tests
         run: flutter test    
 
+      #构建ios
       - name: Build iOS app  
         run: |  
           flutter clean  
           flutter build ios --release --no-codesign 
 
+      #归档构建结果    
       - name: Create IOS Release Artifacts  
         run: |  
           mkdir artifacts  
           cp -r build/ios/iphoneos/Runner.app artifacts/Runner.app  
           zip -r artifacts/Runner.ipa artifacts/Runner.app  
-   
+      
+      #将未签名的构建文件上传到Release    
       - name: Upload iOS IPA to Release  
         id: upload-ipa-release-asset  
         uses: actions/upload-release-asset@v1  
@@ -158,16 +147,37 @@ jobs:
             
   build_windows:  
     name: Build Windows  
-    needs: [create_release, update_windows_version]  
+    needs: [create_release]  
     runs-on: windows-latest  
     steps:  
       - uses: actions/checkout@v4  
 
-       # 安装 Inno Setup 编译器
+      #安装node环境
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      #- run: npm ci
+      # or one-off:
+      #- run: npm install execa
+      
+      #通过执行脚本来修改iss版本号
+      - name: Update iss version
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = './install/builderWindowsExe.iss';
+            let scriptContent = fs.readFileSync(path, 'utf8');
+            scriptContent = scriptContent.replace(/AppVersion=.*$/m, `AppVersion=${{ needs.create_release.outputs.result_version }}.substring(1)`);
+            fs.writeFileSync(path, scriptContent);
+
+      # 下载 Inno Setup
       - name: Download Inno Setup
         run: |
           Invoke-WebRequest -Uri 'https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe' -OutFile 'innosetup-6.2.2.exe'
-     
+      # 安装 Inno Setup
       - name: Install Inno Setup
         run: |
           Start-Process -FilePath 'innosetup-6.2.2.exe' -ArgumentList '/SILENT' -Wait
@@ -176,35 +186,43 @@ jobs:
      # - name: Check Inno Setup version
      #   run: iscc /V
 
+      #安装flutter环境
       - name: Set up Flutter 
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.2'
           channel: 'stable'
-
+      
+      #缓存构建依赖    
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
   
+      #更新依赖    
       - name: Get packages
         run: flutter pub get
-  
+
+      #执行单元测试
       - name: Run tests
         run: flutter test    
 
+      #构建windows程序  
       - name: Build Windows app  
         run: flutter build windows  
-
+      
+      #执行iss脚本生成windows安装包
       - name: Inno Setup
         run: iscc install/builderWindowsExe.iss  
 
+      #对文件进行压缩  
       - name: Zip Folder
         run: |
           cd build/windows/x64/runner/Release
           Compress-Archive -Path ./ -DestinationPath windwos.zip
- 
+
+      #上传到Release    
       - name: Upload Windows exe to Release  
         id: upload-exe-release-asset  
         uses: actions/upload-release-asset@v1  
