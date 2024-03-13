@@ -48,9 +48,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const path = './install/buildWindowsExe.iss';
+            const path = './install/builderWindowsExe.iss';
             let scriptContent = fs.readFileSync(path, 'utf8');
-            scriptContent = scriptContent.replace(/AppVersion=.*$/m, 'AppVersion=${{ needs.create_release.outputs.result_version }}.substring(1)');
+            scriptContent = scriptContent.replace(/AppVersion=.*$/m, `AppVersion=${{ needs.create_release.outputs.result_version }}.substring(1)`);
             fs.writeFileSync(path, scriptContent);
 
 
