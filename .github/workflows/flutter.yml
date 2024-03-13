@@ -3,7 +3,7 @@ name: Flutter CI
 on:  
   push:  
     tags:  
-      - 'v*' # Trigger on version tags like v1.0.0  
+      - '*'
   
 jobs:  
   build_android:  
