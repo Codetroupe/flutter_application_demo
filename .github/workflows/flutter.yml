@@ -127,12 +127,12 @@ jobs:
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
           if [ $response -eq 404 ]; then
-            echo "release_exists = false" >> $GITHUB_ENV
+            echo "release_exists=false" >> $GITHUB_ENV
           else
-            echo "release_exists = true" >> $GITHUB_ENV
+            echo "release_exists=true" >> $GITHUB_ENV
             response=$(curl -s -X GET -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ env.VERSION }}")
             upload_url=$(echo "$response" | jq -r '.upload_url')
-            echo "upload_url = $upload_url" >> $GITHUB_ENV
+            echo "upload_url=$upload_url" >> $GITHUB_ENV
           fi
 
        # 如果不存在，则创建新的 GitHub Release
