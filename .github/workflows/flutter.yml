@@ -47,6 +47,11 @@ jobs:
         with:
           flutter-version: '3.19.2'
           channel: 'stable'
+
+  
+      #更新flutter依赖    
+      - name: Get packages
+        run: flutter pub get
       
       #缓存构建依赖    
       - name: Cache dependencies
@@ -54,11 +59,8 @@ jobs:
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
-  
-      #更新flutter依赖    
-      - name: Get packages
-        run: flutter pub get
-      
+
+
       #执行单元测试 
       - name: Run tests
         run: flutter test    
@@ -107,15 +109,15 @@ jobs:
         with:
           flutter-version: '3.19.2'
           channel: 'stable'
+  
+      - name: Get packages
+        run: flutter pub get
 
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
-  
-      - name: Get packages
-        run: flutter pub get
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }} #根据yaml文件的hash值作为缓存key
   
       - name: Run tests
         run: flutter test    
@@ -193,18 +195,18 @@ jobs:
         with:
           flutter-version: '3.19.2'
           channel: 'stable'
-      
+  
+      #更新依赖    
+      - name: Get packages
+        run: flutter pub get
+
       #缓存构建依赖    
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
-  
-      #更新依赖    
-      - name: Get packages
-        run: flutter pub get
-
+          
       #执行单元测试
       - name: Run tests
         run: flutter test    
