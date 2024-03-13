@@ -159,7 +159,7 @@ jobs:
         run: flutter test    
 
       - name: Build Windows app  
-        run: flutter build windows --release --target-platform=windows-x64  
+        run: flutter build windows  
  
       - name: Upload Windows exe to Release  
         id: upload-exe-release-asset  
