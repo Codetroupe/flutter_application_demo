@@ -53,6 +53,12 @@ jobs:
       - name: Get packages
         run: flutter pub get
       
+
+      - name: Check if tag has changed
+        id: check_tag
+        run: echo ::set-output name=changed::$(echo "${{ github.event_name }}" == 'push' && "${{ github.ref }}" == 'refs/tags/v1.0.2')
+
+
       #缓存构建依赖    
       - name: Cache dependencies
         uses: actions/cache@v4
