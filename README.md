@@ -41,11 +41,23 @@ git push origin v1.0.1
 Builder
 ```bash
 flutter build windows
+```
+```bash
 flutter build apk
-flutter build bundle
+```
+```bash
+flutter build appbundle
+```
+```bash
 flutter build ios
+```
+```bash
 flutter build web
+```
+```bash
 flutter build macos
+```
+```bash
 flutter build linux
 ```
 
