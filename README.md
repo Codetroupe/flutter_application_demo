@@ -15,7 +15,7 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
-Github Actions
+## Github Actions
  
 > 查询所有分支获取commitId
 ```bash
@@ -38,7 +38,7 @@ git push origin v1.0.1
 ```
 
 
-Builder
+## Builder
 ```bash
 flutter build windows
 ```
