@@ -32,6 +32,11 @@ git tag
 git tag v1.0.1 commitId
 ```
 
+> 删除tag
+```bash
+git tag -d v1.0.1
+```
+
 > 推送tag到仓库触发构建(内容在yml文件)
 ```bash
 git push origin v1.0.1 
