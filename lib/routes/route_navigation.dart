@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_demo/routes/router_page.dart';
-import 'package:flutter_application_demo/ui/page/details_screen.dart';
 import 'package:flutter_application_demo/ui/page/root_screen.dart';
 import 'package:go_router/go_router.dart';
 
 /// author:20254 on 2024/3/28 16:28
 /// email:junfengling88@gmail.com
 /// desc:导航路由
-
 
 final GlobalKey<NavigatorState> _sectionANavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'sectionANav');
@@ -81,7 +79,7 @@ final List<RouteBase> routerNavigation = [
                 const RootScreen(
               label: 'A',
               detailsPath: '/a/details',
-              secondDetailsPath: '/c',
+              secondDetailsPath: '/a/c',
             ),
             routes: <RouteBase>[
               // The details screen to display stacked on navigator of the
@@ -105,7 +103,7 @@ final List<RouteBase> routerNavigation = [
                 const RootScreen(
               label: 'B',
               detailsPath: '/b/details/1',
-              secondDetailsPath: '/settings',
+              secondDetailsPath: '/d',
             ),
             routes: <RouteBase>[...routerTabOfProject],
           ),
