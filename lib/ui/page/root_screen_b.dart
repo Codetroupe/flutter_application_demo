@@ -3,13 +3,12 @@
 // desc:
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_demo/utils/permission_util.dart';
 import 'package:go_router/go_router.dart';
 
 /// Widget for the root/initial pages in the bottom navigation bar.
-class RootScreen extends StatelessWidget {
-  /// Creates a RootScreen
-  const RootScreen({
+class RootScreenB extends StatelessWidget {
+  /// Creates a RootScreenB
+  const RootScreenB({
     required this.label,
     required this.detailsPath,
     this.secondDetailsPath,
@@ -40,24 +39,18 @@ class RootScreen extends StatelessWidget {
             const Padding(padding: EdgeInsets.all(4)),
             TextButton(
               onPressed: () {
-                requestStoragePermission();
+                GoRouter.of(context).go(detailsPath, extra: '$label-XYZ');
               },
-              child: const Text('handlePermissions'),
+              child: const Text('View details'),
             ),
             const Padding(padding: EdgeInsets.all(4)),
-            TextButton(
-              onPressed: () {
-                GoRouter.of(context).go(detailsPath);
-              },
-              child: const Text('Face Mach'),
-            ),
-            const Padding(padding: EdgeInsets.all(4)),
-            TextButton(
-              onPressed: () {
-                GoRouter.of(context).go(secondDetailsPath!);
-              },
-              child: const Text('Selfie Segmentation'),
-            ),
+            if (secondDetailsPath != null)
+              TextButton(
+                onPressed: () {
+                  GoRouter.of(context).go(secondDetailsPath!);
+                },
+                child: const Text('View more details'),
+              ),
           ],
         ),
       ),

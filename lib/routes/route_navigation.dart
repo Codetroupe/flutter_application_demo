@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_demo/routes/router_page.dart';
 import 'package:flutter_application_demo/ui/page/root_screen.dart';
+import 'package:flutter_application_demo/ui/page/root_screen_b.dart';
 import 'package:go_router/go_router.dart';
 
 /// author:20254 on 2024/3/28 16:28
@@ -78,8 +79,8 @@ final List<RouteBase> routerNavigation = [
             builder: (BuildContext context, GoRouterState state) =>
                 const RootScreen(
               label: 'A',
-              detailsPath: '/a/details',
-              secondDetailsPath: '/a/c',
+              detailsPath: '/a/face_detector',
+              secondDetailsPath: '/a/segmenter',
             ),
             routes: <RouteBase>[
               // The details screen to display stacked on navigator of the
@@ -100,7 +101,7 @@ final List<RouteBase> routerNavigation = [
             // bottom navigation bar.
             path: '/b',
             builder: (BuildContext context, GoRouterState state) =>
-                const RootScreen(
+                const RootScreenB(
               label: 'B',
               detailsPath: '/b/details/1',
               secondDetailsPath: '/d',
