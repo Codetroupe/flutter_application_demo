@@ -56,6 +56,13 @@ class RootScreen extends StatelessWidget {
               onPressed: () {
                 GoRouter.of(context).go(secondDetailsPath!);
               },
+              child: const Text('Subject Segmentation'),
+            ),
+            const Padding(padding: EdgeInsets.all(4)),
+            TextButton(
+              onPressed: () {
+                GoRouter.of(context).go('/a/selfie_segmentation');
+              },
               child: const Text('Selfie Segmentation'),
             ),
           ],

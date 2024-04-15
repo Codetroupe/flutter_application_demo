@@ -14,6 +14,10 @@ import 'package:go_router/go_router.dart';
 ///首页分支页面路由集合
 final List<RouteBase> routerTabOfHome = [
   fadeTransitionPageRoute(
+      'selfie_segmentation',
+      (BuildContext context, GoRouterState state) =>
+           SelfieSegmenterView()),
+  fadeTransitionPageRoute(
       'details',
       (BuildContext context, GoRouterState state) =>
            ImagePickerPage()),

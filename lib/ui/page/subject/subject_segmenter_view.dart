@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_demo/ui/page/painters/subject_segmentation_painter.dart';
 import 'package:flutter_application_demo/ui/page/subject/detector_view.dart';
 import 'package:flutter_application_demo/utils/log_util.dart';
 import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentation.dart';
@@ -63,16 +64,16 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
     }
 
     final mask = await _segmenter.processImage(inputImage);
-    if (mask != null) {
-      final maskBck = mask.confidences;
-      final maskWidth = mask.width;
-      final maskHeight = mask.height;
-      LogI("mask数据");
-      LogI(maskBck);
-      LogI(maskBck.length);
-      LogI(maskWidth);
-      LogI(maskHeight);
-    }
+    // if (mask != null) {
+    //   final maskBck = mask.confidences;
+    //   final maskWidth = mask.width;
+    //   final maskHeight = mask.height;
+    //   LogI("mask数据");
+    //   LogI(maskBck);
+    //   LogI(maskBck.length);
+    //   LogI(maskWidth);
+    //   LogI(maskHeight);
+    // }
 
     LogI(inputImage);
 
@@ -101,15 +102,32 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
       _text =
           'There is a mask with ${(mask?.confidences ?? []).where((element) => element > 0.8).length} elements';
       _customPaint = null;
-      // final painter = SegmentationPainter(
-      //     mask!,
-      //     Size(411.4,231.0), //inputImage.metadata!.size,
-      //     InputImageRotation.rotation0deg, //inputImage.metadata!.rotation,
-      //     CameraLensDirection.back);
-      // _customPaint = CustomPaint(
-      //   painter: painter,
-      //   size: Size(411.4,231.0),
-      // );
+
+      if (mask != null) {
+        final maskBck = mask.confidences;
+        final maskWidth = mask.width;
+        final maskHeight = mask.height;
+        LogI("mask数据");
+        LogI(maskBck);
+        LogI(maskBck.length);
+        LogI(maskWidth);
+        LogI(maskHeight);
+
+
+
+
+        // final painter = SubjectSegmentationPainter(
+        //     mask!,
+        //     Size(maskWidth.toDouble(),maskHeight.toDouble()), //inputImage.metadata!.size,
+        //     InputImageRotation.rotation0deg, //inputImage.metadata!.rotation,
+        //     CameraLensDirection.back);
+        // _customPaint = CustomPaint(
+        //   painter: painter,
+        //   size: Size(maskWidth.toDouble(),maskHeight.toDouble()),
+        // );
+      }
+
+
     }
     _isBusy = false;
     if (mounted) {

@@ -438,7 +438,7 @@ packages:
       path: "D:\\Android\\project\\FlutterProject\\plugin\\google_ml_kit_flutter\\packages\\google_mlkit_subject_segmentation"
       relative: false
     source: path
-    version: "0.0.2"
+    version: "0.0.16"
   graphs:
     dependency: transitive
     description:
