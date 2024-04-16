@@ -14,6 +14,7 @@ class DetectorView extends StatefulWidget {
     required this.onImage,
     this.customPaint,
     this.text,
+    this.rslPath,
     this.initialDetectionMode = DetectorViewMode.gallery,
     this.initialCameraLensDirection = CameraLensDirection.back,
     this.onCameraFeedReady,
@@ -24,6 +25,7 @@ class DetectorView extends StatefulWidget {
   final String title;
   final CustomPaint? customPaint;
   final String? text;
+  final String? rslPath;
   final DetectorViewMode initialDetectionMode;
   final Function(InputImage inputImage) onImage;
   final Function()? onCameraFeedReady;
@@ -60,6 +62,7 @@ class _DetectorViewState extends State<DetectorView> {
             title: widget.title,
             text: widget.text,
             onImage: widget.onImage,
+            rslPath:widget.rslPath,
             onDetectorViewModeChanged: _onDetectorViewModeChanged);
   }
 

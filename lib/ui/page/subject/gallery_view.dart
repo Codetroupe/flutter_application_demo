@@ -14,6 +14,7 @@ class GalleryView extends StatefulWidget {
       {Key? key,
       required this.title,
       this.text,
+      this.rslPath,
       required this.onImage,
       required this.onDetectorViewModeChanged,
       this.customPaint})
@@ -21,6 +22,7 @@ class GalleryView extends StatefulWidget {
   final CustomPaint? customPaint;
   final String title;
   final String? text;
+  final String? rslPath;
   final Function(InputImage inputImage) onImage;
   final Function()? onDetectorViewModeChanged;
 
@@ -46,15 +48,15 @@ class _GalleryViewState extends State<GalleryView> {
         appBar: AppBar(
           title: Text(widget.title),
           actions: [
-            Padding(
-              padding: EdgeInsets.only(right: 20.0),
-              child: GestureDetector(
-                onTap: widget.onDetectorViewModeChanged,
-                child: Icon(
-                  Platform.isIOS ? Icons.camera_alt_outlined : Icons.camera,
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: EdgeInsets.only(right: 20.0),
+            //   child: GestureDetector(
+            //     onTap: widget.onDetectorViewModeChanged,
+            //     child: Icon(
+            //       Platform.isIOS ? Icons.camera_alt_outlined : Icons.camera,
+            //     ),
+            //   ),
+            // ),
           ],
         ),
         body: _galleryBody(widget));
@@ -100,13 +102,15 @@ class _GalleryViewState extends State<GalleryView> {
           onPressed: () => _getImage(ImageSource.camera),
         ),
       ),
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          child: Text('BitmapImage'),
-          onPressed: () => _getBitmapImage(),
+      if (widget.rslPath != null)
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: ElevatedButton(
+            child: Text('ToImageListPage'),
+            onPressed: () => _getBitmapImage(),
+          ),
         ),
-      ),
+
       if (_image != null)
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -123,13 +127,13 @@ class _GalleryViewState extends State<GalleryView> {
     });
     final pickedFile = await _imagePicker?.pickImage(
       source: source,
-      imageQuality: 80,
+      imageQuality: 100,
     );
-    LogI("图片数据");
-    LogI(pickedFile);
-    LogI(pickedFile?.path);
-    LogI(pickedFile?.name);
-    LogI(pickedFile?.mimeType);
+    // LogI("图片数据");
+    // LogI(pickedFile);
+    // LogI(pickedFile?.path);
+    // LogI(pickedFile?.name);
+    // LogI(pickedFile?.mimeType);
     if (pickedFile != null) {
       _processFile(pickedFile.path);
     }
@@ -140,9 +144,6 @@ class _GalleryViewState extends State<GalleryView> {
       return;
     }
     LogI("bitmapImage数据:::::");
-    // SubjectSegmentation()
-    //     .getBitmapByRemoveBg(_image!.uri.toString())
-    //     .then((value) => {LogI("返回的图片路径:${value}")});
   }
 
   Future _getImageAsset() async {

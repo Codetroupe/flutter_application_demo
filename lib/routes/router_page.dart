@@ -31,6 +31,9 @@ final List<RouteBase> routerTabOfHome = [
       'segmenter',
           (BuildContext context, GoRouterState state) =>  SubjectSegmenterView()),
   fadeTransitionPageRoute(
+      'image_list',
+          (BuildContext context, GoRouterState state) =>  SubjectSegmenterView()),
+  fadeTransitionPageRoute(
       'face_detector',
           (BuildContext context, GoRouterState state) =>  FaceDetectorView()),
 ];

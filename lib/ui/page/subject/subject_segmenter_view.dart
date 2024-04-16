@@ -20,6 +20,7 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
   bool _canProcess = true;
   bool _isBusy = false;
   CustomPaint? _customPaint;
+  String? _rslPath;
   String? _text;
   var _cameraLensDirection = CameraLensDirection.front;
 
@@ -35,6 +36,7 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
     return DetectorView(
       title: 'Subject Segmenter',
       customPaint: _customPaint,
+      rslPath: _rslPath,
       text: _text,
       onImage: _processImage,
       initialCameraLensDirection: _cameraLensDirection,
@@ -48,6 +50,7 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
     _isBusy = true;
     setState(() {
       _text = '';
+      _rslPath = null;
     });
 
     LogI("inputImage.toJson()=>${inputImage.toJson()}");
@@ -56,31 +59,19 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
       Image image = Image.file(File.fromUri(Uri.parse(inputImage.filePath!)));
       // 预先获取图片信息
       image.image
-          .resolve(new ImageConfiguration())
-          .addListener(new ImageStreamListener((ImageInfo info, bool _) {
+          .resolve(const ImageConfiguration())
+          .addListener(ImageStreamListener((ImageInfo info, bool _) {
         LogI("Image.width=>${info.image.width}");
         LogI("Image.height=>${info.image.height}");
       }));
     }
 
     final mask = await _segmenter.processImage(inputImage);
-    // if (mask != null) {
-    //   final maskBck = mask.confidences;
-    //   final maskWidth = mask.width;
-    //   final maskHeight = mask.height;
-    //   LogI("mask数据");
-    //   LogI(maskBck);
-    //   LogI(maskBck.length);
-    //   LogI(maskWidth);
-    //   LogI(maskHeight);
-    // }
-
-    LogI(inputImage);
-
-    LogI(inputImage.metadata?.size != null);
-    LogI(inputImage.metadata?.size.toString());
-    LogI(inputImage.metadata?.rotation != null);
-    LogI(mask != null);
+    // LogI(inputImage);
+    // LogI(inputImage.metadata?.size != null);
+    // LogI(inputImage.metadata?.size.toString());
+    // LogI(inputImage.metadata?.rotation != null);
+    // LogI(mask != null);
 
     if (inputImage.metadata?.size != null &&
         inputImage.metadata?.rotation != null &&
@@ -107,14 +98,14 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
         final maskBck = mask.confidences;
         final maskWidth = mask.width;
         final maskHeight = mask.height;
+        _rslPath = mask.basisPath;
         LogI("mask数据");
-        LogI(maskBck);
+        LogI(mask.basisPath);
+        LogI(mask.basisItemList);
         LogI(maskBck.length);
-        LogI(maskWidth);
-        LogI(maskHeight);
-
-
-
+        LogI("宽度:${maskWidth}");
+        LogI("高度:${maskHeight}");
+        // LogI(mask.);
 
         // final painter = SubjectSegmentationPainter(
         //     mask!,
@@ -126,8 +117,6 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
         //   size: Size(maskWidth.toDouble(),maskHeight.toDouble()),
         // );
       }
-
-
     }
     _isBusy = false;
     if (mounted) {
