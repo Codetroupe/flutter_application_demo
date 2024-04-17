@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_demo/routes/router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rxdart/rxdart.dart';
 import 'dart:developer';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
@@ -15,12 +16,13 @@ class NestedTabNavigationExampleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
+    return ProviderScope(
+        child: MaterialApp.router(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       routerConfig: router,
-    );
+    ));
   }
 }

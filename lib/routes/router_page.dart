@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_demo/routes/router_base.dart';
 import 'package:flutter_application_demo/ui/page/details_screen.dart';
 import 'package:flutter_application_demo/ui/page/face/face_detector_view.dart';
+import 'package:flutter_application_demo/ui/page/image/image_page_view.dart';
 import 'package:flutter_application_demo/ui/page/image_picker.dart';
 import 'package:flutter_application_demo/ui/page/segmenter/selfie_segmenter_view.dart';
 import 'package:flutter_application_demo/ui/page/subject/subject_segmenter_view.dart';
@@ -31,8 +32,8 @@ final List<RouteBase> routerTabOfHome = [
       'segmenter',
           (BuildContext context, GoRouterState state) =>  SubjectSegmenterView()),
   fadeTransitionPageRoute(
-      'image_list',
-          (BuildContext context, GoRouterState state) =>  SubjectSegmenterView()),
+      'image_list/:filePath',
+          (BuildContext context, GoRouterState state) =>  ImagePageView(title: 'Image Preview', rslPath: state.pathParameters['filePath'])),
   fadeTransitionPageRoute(
       'face_detector',
           (BuildContext context, GoRouterState state) =>  FaceDetectorView()),

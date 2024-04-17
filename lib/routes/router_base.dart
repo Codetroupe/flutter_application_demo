@@ -24,8 +24,6 @@ fadeTransitionPageRoute(
         transitionDuration: const Duration(milliseconds: 100),
         transitionsBuilder: (BuildContext context, Animation<double> animation,
             Animation<double> secondaryAnimation, Widget child) {
-          // Change the opacity of the screen using a Curve based on the the animation's
-          // value
           return FadeTransition(
             opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
             child: child,
@@ -36,6 +34,30 @@ fadeTransitionPageRoute(
   );
 }
 
+fadeTransitionPageRouteWithParams(
+    path, Widget Function(BuildContext, GoRouterState) child,params) {
+  return GoRoute(
+    path: path,
+    pageBuilder: (BuildContext context, GoRouterState state) {
+      return CustomTransitionPage<void>(
+        key: state.pageKey,
+        child: child(context, state),
+        transitionDuration: const Duration(milliseconds: 100),
+        transitionsBuilder: (BuildContext context, Animation<double> animation,
+            Animation<double> secondaryAnimation, Widget child) {
+          return FadeTransition(
+            opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+            child: child,
+          );
+        },
+      );
+    },
+  );
+}
+
+
+
+
 fadeTransitionPage(BuildContext context, GoRouterState state, child) {
   return CustomTransitionPage<void>(
     key: state.pageKey,
@@ -43,8 +65,8 @@ fadeTransitionPage(BuildContext context, GoRouterState state, child) {
     transitionDuration: const Duration(milliseconds: 100),
     transitionsBuilder: (BuildContext context, Animation<double> animation,
         Animation<double> secondaryAnimation, Widget child) {
-      // Change the opacity of the screen using a Curve based on the the animation's
-      // value
+// Change the opacity of the screen using a Curve based on the the animation's
+// value
       return FadeTransition(
         opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
         child: child,

@@ -5,13 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_demo/ui/page/painters/subject_segmentation_painter.dart';
 import 'package:flutter_application_demo/ui/page/subject/detector_view.dart';
 import 'package:flutter_application_demo/utils/log_util.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentation.dart';
 
 class SubjectSegmenterView extends StatefulWidget {
   @override
   State<SubjectSegmenterView> createState() => _SubjectSegmenterViewState();
 }
-
+final imagePathString = StateProvider<String>((ref) => "");
 class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
   final SubjectSegmenter _segmenter = SubjectSegmenter(
     mode: SegmenterMode.stream,
@@ -33,6 +34,7 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
 
   @override
   Widget build(BuildContext context) {
+
     return DetectorView(
       title: 'Subject Segmenter',
       customPaint: _customPaint,
@@ -105,6 +107,7 @@ class _SubjectSegmenterViewState extends State<SubjectSegmenterView> {
         LogI(maskBck.length);
         LogI("宽度:${maskWidth}");
         LogI("高度:${maskHeight}");
+
         // LogI(mask.);
 
         // final painter = SubjectSegmentationPainter(

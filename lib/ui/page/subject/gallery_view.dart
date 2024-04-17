@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_demo/utils/log_util.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -102,15 +103,19 @@ class _GalleryViewState extends State<GalleryView> {
           onPressed: () => _getImage(ImageSource.camera),
         ),
       ),
-      if (widget.rslPath != null)
+      if (_image != null)
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: ElevatedButton(
-            child: Text('ToImageListPage'),
-            onPressed: () => _getBitmapImage(),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: widget.rslPath != null
+              ? ElevatedButton(
+                  child: const Text('ToImageListPage'),
+                  onPressed: () => {
+                    GoRouter.of(context).go(
+                        '/a/image_list/${Uri.encodeComponent(widget.rslPath)}')
+                  },
+                )
+              : const CircularProgressIndicator(),
         ),
-
       if (_image != null)
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -144,6 +149,10 @@ class _GalleryViewState extends State<GalleryView> {
       return;
     }
     LogI("bitmapImage数据:::::");
+  }
+
+  String encodeFilePath(String filePath) {
+    return Uri.encodeComponent(filePath);
   }
 
   Future _getImageAsset() async {

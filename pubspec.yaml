@@ -56,6 +56,8 @@ dependencies:
     path: D:\Android\project\FlutterProject\plugin\subject_segmentation
   google_mlkit_subject_segmentation:
     path: D:\Android\project\FlutterProject\plugin\google_ml_kit_flutter\packages\google_mlkit_subject_segmentation
+  riverpod: ^2.5.1
+  image: ^4.1.7
 
 dev_dependencies:
   flutter_test:
